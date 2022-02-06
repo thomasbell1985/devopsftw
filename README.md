@@ -4,8 +4,8 @@ If you are reading this then you know why you are here. This repository contains
 
 There are three relevant folders for your consideration:
 
-* [docker-ayes]()
-* [terrafom]()
-* [scripts]()
+* [docker-ayes](https://github.com/thomasbell1985/devopsftw/tree/master/docker-ayes)
+* [terrafom](https://github.com/thomasbell1985/devopsftw/tree/master/terraform)
+* [scripts](https://github.com/thomasbell1985/devopsftw/tree/master/scripts)
 
 Each of the folders linked above have their own README indicating how to perform relevant operations. Enjoy your time here in this repository.
