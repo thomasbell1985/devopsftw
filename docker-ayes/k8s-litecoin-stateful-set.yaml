@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: litecoin-headless-svc
+  labels:
+    app: litecoin-headless-svc
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: litecoin
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: litecoin
+spec:
+  selector:
+    matchLabels:
+      app: litecoin # has to match .spec.template.metadata.labels
+  serviceName: "litecoin"
+  replicas: 1 
+  minReadySeconds: 10 # by default is 0
+  template:
+    metadata:
+      labels:
+        app: litecoin # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: litecoin
+        image: thomasbell/litecoin
+        ports:
+        # - containerPort: 80
+        #   name: web
+        volumeMounts:
+        - name: litecoin-state
+          mountPath: /root/.litecoin/
+  volumeClaimTemplates:
+  - metadata:
+      name: litecoin-state
+    spec:
+      accessModes: [ "ReadWriteMany" ]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 1Gi

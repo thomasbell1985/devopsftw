@@ -1,0 +1,51 @@
+def label = "jenkins-node-${UUID.randomUUID().toString()}"
+
+podTemplate(
+        label: label,
+        cloud: 'kubernetes',
+        serviceAccount: "jenkins",
+        containers: [
+                containerTemplate(
+                    name: 'jnlp',
+                    image: 'jenkins/jnlp-slave@sha256:b47df39ab0f03ec8003e853e9bd31d5cd1cf49955fa0d15173868f474f503de7',
+                    alwaysPullImage: true,
+                    args: '${computer.jnlpmac} ${computer.name}'
+                ),
+                containerTemplate(
+                    name: 'kubectl',
+                    image: 'gcr.io/google.com/cloudsdktool/cloud-sdk@sha256:5603aabc1815920eeae987e4b2a5b9c304b27cc96c478160bc79ff830eec281b',
+                    command: 'sleep',
+                    args: 'infinity'
+                )
+        ],
+         volumes: [
+            hostPathVolume(mountPath: '/usr/bin/docker', hostPath: '/usr/bin/docker'),
+            // This allows us to run docker commands from inside the container. It will leverage the docker version
+            // Running on the host
+            hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
+        ]
+) {
+    node(label) {
+        def gitCommit
+        stage('Checkout') {
+            gitCommit = checkout(scm).GIT_COMMIT.take(7)
+        }
+        container('kubectl') {
+            stage('build') {
+                sh 'cd docker-ayes && docker build -t thomasbell/litecoin .'
+            }
+            stage('archive') {
+                withCredentials([file(credentialsId: 'docker-hub-credentials', variable:'DOCKER_HUB_CREDENTIALS')]) {
+                    sh './push_docker.sh'
+                }
+            }
+            stage("deploy") {
+                container('kubectl') {
+                    sh 'kubectl apply -f k8s-litecoin-stateful-set.yaml'
+                    sh 'kubectl rollout status statefulset/litecoin'
+                }
+            }
+            
+        }
+   }
+}
