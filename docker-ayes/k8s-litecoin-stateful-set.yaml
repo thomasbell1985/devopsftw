@@ -33,11 +33,9 @@ spec:
       - name: litecoin
         image: thomasbell/litecoin
         ports:
-        # - containerPort: 80
-        #   name: web
         volumeMounts:
         - name: litecoin-state
-          mountPath: /root/.litecoin/
+          mountPath: /litecoin/.litecoin/
   volumeClaimTemplates:
   - metadata:
       name: litecoin-state
